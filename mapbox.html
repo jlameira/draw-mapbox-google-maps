@@ -54,7 +54,7 @@
   </div>
 
   <script>
-    mapboxgl.accessToken = 'your token';
+    mapboxgl.accessToken = 'pk.eyJ1IjoiamxhbWVpcmEiLCJhIjoiY2phamp1b2ozMjllMjMzbWh4NjdudGU4ZSJ9.1IciWRPhGqihHdQyZW9SPA';
     /* eslint-disable */
     var map = new mapboxgl.Map({
       container: 'map', // container id
@@ -76,7 +76,7 @@
     map.on('draw.delete', updateArea);
     map.on('draw.update', updateArea);
 
-    function updateArea(e, lista) {
+    function updateArea(e) {
       var data = draw.getAll();
       var answer = document.getElementById('calculated-area');
       if (data.features.length > 0) {
