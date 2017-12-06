@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset='utf-8' />
+  <title>Show drawn polygon area</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.css' rel='stylesheet' />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body onload=" initialize()">
+
+  <style>
+    .calculation-box {
+      height: 75px;
+      width: 150px;
+      position: absolute;
+      bottom: 40px;
+      left: 10px;
+      background-color: rgba(255, 255, 255, .9);
+      padding: 15px;
+      text-align: center;
+    }
+
+    p {
+      font-family: 'Open Sans';
+      margin: 0;
+      font-size: 13px;
+    }
+  </style>
+
+  <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/turf/v3.0.11/turf.min.js'></script>
+  <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.0/mapbox-gl-draw.js'></script>
+  <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.0/mapbox-gl-draw.css' type='text/css'
+  />
+  <div id='map'></div>
+  <div class='calculation-box'>
+    <p>Draw a polygon using the draw tools.</p>
+    <div id='calculated-area'></div>
+  </div>
+
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiamxhbWVpcmEiLCJhIjoiY2phamp1b2ozMjllMjMzbWh4NjdudGU4ZSJ9.1IciWRPhGqihHdQyZW9SPA';
+    /* eslint-disable */
+    var map = new mapboxgl.Map({
+      container: 'map', // container id
+      style: 'mapbox://styles/mapbox/streets-v9', //hosted style id
+      center: [-43.918318, -19.909381], // starting position
+      zoom: 12 // starting zoom
+    });
+
+    var draw = new MapboxDraw({
+      displayControlsDefault: false,
+      controls: {
+        polygon: true,
+        trash: true
+      }
+    });
+    map.addControl(draw);
+
+    map.on('draw.create', updateArea);
+    map.on('draw.delete', updateArea);
+    map.on('draw.update', updateArea);
+
+    function updateArea(e, lista) {
+      var data = draw.getAll();
+      var answer = document.getElementById('calculated-area');
+      if (data.features.length > 0) {
+        var area = turf.area(data);
+        // restrict to area to 2 decimal points
+        var rounded_area = Math.round(area * 100) / 100;
+        answer.innerHTML = '<p><strong>' + rounded_area + '</strong></p><p>square meters</p>';
+      } else {
+        answer.innerHTML = '';
+        if (e.type !== 'draw.delete') alert("Use the draw tools to draw a polygon!");
+      }
+    }
+
+    function initialize() {
+      var numPoints = [
+        [-43.936527, -19.90077],
+        [-43.918318, -19.909381],
+        [-43.909734, -19.923984],
+        [-43.938346, -19.900157],
+        [-43.949382, -19.926674]
+      ];
+      points = [];
+      for (var i = 0; i < numPoints.length; i++) {
+        points.push(numPoints[i]);
+      }
+      points.sort(sortPointY);
+      points.sort(sortPointX);
+      hullPoints = [];
+      chainHull_2D(points, points.length, hullPoints);
+
+      map.on('load', function () {
+
+        map.addLayer({
+          'id': 'maine',
+          'type': 'fill',
+          'source': {
+            'type': 'geojson',
+            'data': {
+              'type': 'Feature',
+              'geometry': {
+                'type': 'Polygon',
+                'coordinates': [
+                  hullPoints
+                ]
+              }
+            }
+          },
+          'layout': {},
+          'paint': {
+            'fill-color': '#80ff80',
+            'fill-opacity': 0.9,
+            'fill-outline-color': '#000000'
+          }
+        })
+      })
+
+    }
+
+    function sortPointX(a, b) {
+      return a - b;
+    }
+
+    function sortPointY(a, b) {
+      return a - b;
+    }
+  </script>
+
+  <script xmlns="http://www.w3.org/1999/xhtml" src="js/convex_hull2.js"></script>
+
+
+</body>
+
+</html>
